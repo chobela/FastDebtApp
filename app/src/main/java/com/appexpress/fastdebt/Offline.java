@@ -8,7 +8,7 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.appexpress.fastdebt.Database.DBManager;
+import com.appexpress.fastdebt.database.DBManager;
 
 public class Offline extends AppCompatActivity {
 
