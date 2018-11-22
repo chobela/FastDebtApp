@@ -37,7 +37,7 @@
 
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:text="PLease enter all fields"
+                    android:text="Please enter all fields"
                     android:layout_marginTop="30dp"
                     android:paddingLeft="10dp"
                     android:id="@+id/txt"

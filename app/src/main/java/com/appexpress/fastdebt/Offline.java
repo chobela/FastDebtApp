@@ -27,6 +27,11 @@ public class Offline extends AppCompatActivity {
 
         session = new SessionManager(getApplicationContext());
 
+        if (!session.isLoggedIn()) {
+
+            logoutUser();
+        }
+
         tvName = (TextView) findViewById(R.id.name);
         tvTown = (TextView) findViewById(R.id.town);
         tvAddress = (TextView) findViewById(R.id.address);
