@@ -7,9 +7,6 @@
     android:background="#ffffff">
 
 
-
-
-
     <ImageView android:layout_gravity="center"
         android:id="@+id/entry"
         android:layout_width="100dp"
