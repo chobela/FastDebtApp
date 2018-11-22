@@ -4,6 +4,7 @@ import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -15,12 +16,33 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
+
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.appexpress.fastdebt.app.VolleySingleton;
+import com.appexpress.fastdebt.database.DBManager;
+import com.appexpress.fastdebt.database.DatabaseHelper;
+import com.appexpress.fastdebt.database.Pushtoserver;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
     private WebView webView;
     private String url;
     private SessionManager session;
+    private DatabaseHelper db;
+    private long _id;
+
+    private DBManager dbManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,8 +59,32 @@ public class MainActivity extends AppCompatActivity {
 
             url = "http://fastdebt.pe.hu/form/index.php?uid=" + uid;
 
+            db = new DatabaseHelper(MainActivity.this);
+
             webView = findViewById(R.id.webView);
             startWebView(url);
+
+            dbManager = new DBManager(this);
+            dbManager.open();
+
+
+                    //getting all the unsynced names
+                    Cursor cursor = db.getalldata();
+                    if (cursor.moveToFirst()) {
+                        do {
+                            //calling the method to save the unsynced data to MySQL
+                            saveData(
+                                    cursor.getInt(cursor.getColumnIndex(DatabaseHelper._ID)),
+                                    cursor.getString(cursor.getColumnIndex(DatabaseHelper.UID)),
+                                    cursor.getString(cursor.getColumnIndex(DatabaseHelper.NAME)),
+                                    cursor.getString(cursor.getColumnIndex(DatabaseHelper.TOWN)),
+                                    cursor.getString(cursor.getColumnIndex(DatabaseHelper.ADDRESS)),
+                                    cursor.getString(cursor.getColumnIndex(DatabaseHelper.AMOUNT)),
+                                    cursor.getString(cursor.getColumnIndex(DatabaseHelper.DOCID)),
+                                    cursor.getString(cursor.getColumnIndex(DatabaseHelper.COMMENT))
+                            );
+                        } while (cursor.moveToNext());
+                    }
 
         } else {
 
@@ -81,7 +127,6 @@ public class MainActivity extends AppCompatActivity {
                     }
 
 
-
                     public boolean timeout;{
                         timeout = true;
                     }
@@ -103,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
                             @Override
                             public void run() {
                                 try {
-                                    Thread.sleep(10000);
+                                    Thread.sleep(15000);
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
                                 }
@@ -152,6 +197,49 @@ public class MainActivity extends AppCompatActivity {
         webView.clearCache(true);
         webView.loadUrl(url);
 
+    }
+
+    public void saveData(final int id, final String uid, final String name, final String town, final String address, final String amount, final String docid, final String comment) {
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, "http://fastdebt.pe.hu/form/save.php",
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try {
+                            JSONObject obj = new JSONObject(response);
+                            if (!obj.getBoolean("error")) {
+                                //updating the status in sqlite
+
+                                Toast.makeText(getApplicationContext(),"Syncing " + name + "..", Toast.LENGTH_SHORT).show();
+
+                                dbManager.delete(uid);
+
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                    }
+                }) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<>();
+                params.put("uid", uid);
+                params.put("name", name);
+                params.put("town", town);
+                params.put("address", address);
+                params.put("amount", amount);
+                params.put("docid", docid);
+                params.put("comment", comment);
+                return params;
+            }
+        };
+
+        VolleySingleton.getInstance(MainActivity.this).addToRequestQueue(stringRequest);
     }
 
 

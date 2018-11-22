@@ -67,8 +67,7 @@ public class DBManager {
         return i;
     }
 
-    public void delete () {
-        database.delete(DatabaseHelper.TABLE_NAME, null, null);
-        database.close();
+    public void delete(String uid) {
+        database.delete(DatabaseHelper.TABLE_NAME, DatabaseHelper.UID + "=" + uid, null);
     }
 }

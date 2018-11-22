@@ -7,12 +7,18 @@ import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.Response;
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.appexpress.fastdebt.app.VolleySingleton;
 
+import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class Pushtoserver extends BroadcastReceiver {
 
@@ -62,7 +68,7 @@ public class Pushtoserver extends BroadcastReceiver {
      * if the name is successfully sent
      * we will update the status as synced in SQLite
      * */
-    private void saveData(final int id, final String uid, final String name, final String town, final String address, final String amount, final String docid, final String comment,) {
+    public void saveData(final int id, final String uid, final String name, final String town, final String address, final String amount, final String docid, final String comment) {
         StringRequest stringRequest = new StringRequest(Request.Method.POST, "http://fastdebt.pe.hu/form/save.php",
                 new Response.Listener<String>() {
                     @Override
@@ -71,10 +77,10 @@ public class Pushtoserver extends BroadcastReceiver {
                             JSONObject obj = new JSONObject(response);
                             if (!obj.getBoolean("error")) {
                                 //updating the status in sqlite
-                               // db.updateNameStatus(id, MainActivity.NAME_SYNCED_WITH_SERVER);
+                                //db.delete();
 
                                 //sending the broadcast to refresh the list
-                                context.sendBroadcast(new Intent(MainActivity.DATA_SAVED_BROADCAST));
+                                //context.sendBroadcast(new Intent(MainActivity.DATA_SAVED_BROADCAST));
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -90,7 +96,13 @@ public class Pushtoserver extends BroadcastReceiver {
             @Override
             protected Map<String, String> getParams() throws AuthFailureError {
                 Map<String, String> params = new HashMap<>();
+                params.put("uid", uid);
                 params.put("name", name);
+                params.put("town", town);
+                params.put("address", address);
+                params.put("amount", amount);
+                params.put("docid", docid);
+                params.put("comment", comment);
                 return params;
             }
         };
